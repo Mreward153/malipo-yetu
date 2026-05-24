@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#060D09">
+<title>Malipo Yetu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
+<style>
+:root {
+  --bg:#060D09; --card:#0C1510; --card2:#101A13; --border:#1C2B1F;
+  --green:#1DB954; --gd:#169040; --glow:rgba(29,185,84,0.25);
+  --text:#EEF7F0; --muted:#6B8F72; --muted2:#3D5C43;
+  --gold:#F5C842; --red:#F04E4E; --blue:#5BC8F5;
+  --purple:#B57BF7; --orange:#F5874E;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);}
+#app{max-width:430px;height:100dvh;margin:0 auto;display:flex;flex-direction:column;overflow:hidden;position:relative;}
+.screen{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;padding-bottom:env(safe-area-inset-bottom,16px);}
+.screen::-webkit-scrollbar{display:none;}
+
+/* NAV */
+.nav{display:flex;justify-content:space-around;align-items:center;padding:10px 0 calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--border);background:var(--card);flex-shrink:0;}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:var(--muted);background:transparent;border:none;cursor:pointer;padding:6px 18px;border-radius:12px;font-family:'DM Sans',sans-serif;font-weight:600;transition:all .2s;position:relative;}
+.nav-btn.active{color:var(--green);background:rgba(29,185,84,.12);}
+.nav-icon{font-size:22px;line-height:1;}
+.nav-dot{position:absolute;top:4px;right:10px;width:8px;height:8px;border-radius:50%;background:var(--green);}
+
+/* HEADER */
+.hdr{background:linear-gradient(170deg,#0D2010,var(--bg));padding:calc(env(safe-area-inset-top,12px) + 16px) 22px 24px;}
+
+/* CARDS */
+.card{background:var(--card2);border:1px solid var(--border);border-radius:18px;padding:16px;}
+.card-green{background:rgba(29,185,84,.08);border-color:rgba(29,185,84,.35);}
+
+/* BUTTONS */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px;border:none;border-radius:16px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:15px;cursor:pointer;transition:all .2s;}
+.btn-primary{background:linear-gradient(135deg,var(--green),var(--gd));color:#000;box-shadow:0 6px 20px var(--glow);}
+.btn-primary:disabled{background:var(--border);color:var(--muted);box-shadow:none;}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted);}
+.btn-danger{background:#1A0808;border:1px solid #440000;color:var(--red);}
+.btn-small{padding:9px 18px;width:auto;font-size:13px;border-radius:12px;}
+
+/* INPUTS */
+.inp-wrap{margin-bottom:14px;}
+.inp-label{color:var(--muted);font-size:11px;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:8px;}
+.inp-row{position:relative;}
+.inp-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:18px;pointer-events:none;}
+.inp{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:14px 14px 14px 44px;color:var(--text);font-size:15px;outline:none;font-family:'DM Sans',sans-serif;}
+.inp:focus{border-color:var(--green);}
+.inp::placeholder{color:var(--muted2);}
+.inp.no-icon{padding-left:16px;}
+
+/* TAG */
+.tag{display:inline-block;background:rgba(29,185,84,.15);border:1px solid rgba(29,185,84,.4);border-radius:20px;padding:3px 10px;color:var(--green);font-size:11px;font-weight:600;}
+
+/* STEP BAR */
+.steps{display:flex;gap:6px;margin-bottom:24px;}
+.step-col{flex:1;display:flex;flex-direction:column;gap:4px;}
+.step-bar{height:3px;border-radius:3px;background:var(--border);transition:background .3s;}
+.step-bar.done{background:var(--green);}
+.step-lbl{font-size:10px;font-weight:600;color:var(--muted);}
+.step-lbl.active{color:var(--green);}
+
+/* SERVICE GRID */
+.svc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.svc-card{border-radius:18px;padding:14px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;border:1px solid transparent;transition:transform .15s;}
+.svc-card:active{transform:scale(.95);}
+.svc-icon{font-size:24px;}
+.svc-label{font-size:10px;font-weight:600;text-align:center;line-height:1.3;}
+
+/* TX TILE */
+.tx-tile{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;}
+.tx-ico{width:42px;height:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.tx-info{flex:1;margin-left:12px;}
+.tx-name{font-size:13px;font-weight:600;color:var(--text);}
+.tx-date{font-size:11px;color:var(--muted);margin-top:2px;}
+.tx-amt{font-size:13px;font-weight:700;color:var(--red);}
+.tx-ok{font-size:10px;color:var(--green);margin-top:2px;text-align:right;}
+
+/* FILTER TABS */
+.filters{display:flex;gap:8px;margin-bottom:18px;}
+.filter-btn{padding:7px 18px;border-radius:20px;border:1px solid var(--border);background:var(--card2);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.filter-btn.active{background:rgba(29,185,84,.18);border-color:var(--green);color:var(--green);}
+
+/* PROVIDER TILE */
+.prov-tile{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-radius:16px;border:1px solid var(--border);background:var(--card2);cursor:pointer;margin-bottom:10px;transition:all .2s;}
+.prov-tile.selected{border-color:var(--green);background:rgba(29,185,84,.1);}
+.prov-tile.linked{opacity:.5;cursor:default;}
+.prov-logo{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;margin-right:13px;}
+.prov-name{font-size:14px;font-weight:600;color:var(--text);}
+.prov-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* AMOUNT PRESETS */
+.presets{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
+.preset{padding:10px 4px;border-radius:13px;border:1px solid var(--border);background:var(--card2);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.preset.active{border-color:var(--green);background:rgba(29,185,84,.18);color:var(--green);}
+
+/* PAY METHODS */
+.methods{display:flex;gap:8px;margin-bottom:18px;}
+.method{flex:1;padding:11px 4px;border-radius:14px;border:1px solid var(--border);background:var(--card2);display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:all .15s;}
+.method.active{border-color:var(--green);background:rgba(29,185,84,.12);}
+.method-ico{font-size:18px;}
+.method-lbl{font-size:10px;font-weight:600;color:var(--muted);}
+.method.active .method-lbl{color:var(--green);}
+
+/* CONTACT TILE */
+.contact{display:flex;align-items:center;padding:13px 15px;border-radius:16px;border:1px solid var(--border);background:var(--card2);cursor:pointer;margin-bottom:8px;transition:all .2s;}
+.contact.selected{border-color:var(--green);background:rgba(29,185,84,.1);}
+.contact-avatar{width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;margin-right:12px;}
+.contact-name{font-size:14px;font-weight:600;color:var(--text);}
+.contact-phone{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* SUMMARY ROW */
+.sum-row{display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;}
+.sum-key{color:var(--muted);}
+.sum-val{color:var(--text);}
+.sum-val.green{color:var(--green);font-weight:700;}
+
+/* SUCCESS */
+.success-circle{width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--gd));display:flex;align-items:center;justify-content:center;font-size:44px;margin:0 auto 22px;box-shadow:0 0 40px var(--glow);animation:pop .4s ease both;}
+@keyframes pop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+
+/* LOGO SCREEN */
+.logo-box{width:72px;height:72px;border-radius:22px;background:linear-gradient(135deg,var(--green),var(--gd));display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 18px;box-shadow:0 0 30px var(--glow);}
+
+/* LANG */
+.lang-tile{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-radius:18px;border:1px solid var(--border);background:var(--card2);cursor:pointer;margin-bottom:12px;transition:all .2s;}
+.lang-tile.selected{border-color:var(--green);background:rgba(29,185,84,.1);}
+.lang-check{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--gd));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#000;}
+
+/* WALLET ADD BTN */
+.add-btn{flex:1;padding:18px 10px;border-radius:18px;border:1px solid;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;background:transparent;}
+.add-btn-icon{font-size:28px;}
+.add-btn-label{font-size:13px;font-weight:700;}
+.add-btn-sub{font-size:10px;color:var(--muted);text-align:center;line-height:1.4;}
+
+/* TOOLTIP */
+.tip{border-radius:14px;padding:12px 14px;}
+.tip-gold{background:rgba(245,200,66,.08);border:1px solid rgba(245,200,66,.3);}
+
+/* PROFILE MENU */
+.menu-item{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-radius:16px;border:1px solid var(--border);background:var(--card2);margin-bottom:8px;cursor:pointer;}
+.menu-ico{width:38px;height:38px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-right:13px;flex-shrink:0;}
+.menu-name{font-size:14px;font-weight:600;color:var(--text);}
+.menu-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* BACK BTN */
+.back-btn{background:var(--border);border:none;border-radius:12px;color:var(--text);padding:8px 14px;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;margin-bottom:14px;}
+
+/* UTILS */
+.row{display:flex;align-items:center;justify-content:space-between;}
+.col{display:flex;flex-direction:column;}
+.gap8{gap:8px;}
+.mb4{margin-bottom:4px;}
+.mb8{margin-bottom:8px;}
+.mb10{margin-bottom:10px;}
+.mb12{margin-bottom:12px;}
+.mb14{margin-bottom:14px;}
+.mb16{margin-bottom:16px;}
+.mb18{margin-bottom:18px;}
+.mb20{margin-bottom:20px;}
+.mb22{margin-bottom:22px;}
+.p20{padding:20px;}
+.syne{font-family:'Syne',sans-serif;}
+.f22{font-size:22px;font-weight:800;}
+.f18{font-size:18px;font-weight:800;}
+.f15{font-size:15px;font-weight:700;}
+.f13{font-size:13px;}
+.f12{font-size:12px;}
+.f11{font-size:11px;}
+.center{text-align:center;}
+.muted{color:var(--muted);}
+.green{color:var(--green);}
+.red{color:var(--red);}
+.sep{height:1px;background:var(--border);margin:10px 0;}
+.divider{display:flex;align-items:center;gap:12px;margin:14px 0;}
+.divider-line{flex:1;height:1px;background:var(--border);}
+.spin{animation:spin 1s linear infinite;display:inline-block;}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.fade-in{animation:fadeUp .35s ease both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="screen" id="screen"></div>
+  <div class="nav" id="nav" style="display:none"></div>
+</div>
+
+<script>
+// ── STATE ─────────────────────────────────────────────────
+const state = {
+  page: 'login',
+  tab: 'home',
+  flow: null,
+  lang: localStorage.getItem('lang') || 'sw',
+  user: null,       // set after Pi auth: {name, piUid, accessToken}
+  linked: [],
+  txs: [],          // loaded per-user from localStorage after login
+  selService: null,
+  sendPhone: '',
+  sendStep: 1,
+  linkType: null,
+  linkStep: 1,
+  linkSel: null,
+  successType: 'pay',
+  filter: 'all',
+  langChoice: null,
+  registerStep: 1,
+  balance: 0,       // loaded per-user from localStorage after login
+};
+
+// ── PER-USER PERSISTENCE ──────────────────────────────────
+// All data keyed by Pi UID so each person has their own data.
+
+function userKey(suffix) {
+  const uid = state.user?.piUid || 'guest';
+  return 'my_' + uid + '_' + suffix;
+}
+
+function saveUserData() {
+  if (!state.user) return;
+  localStorage.setItem(userKey('balance'), JSON.stringify(state.balance));
+  localStorage.setItem(userKey('txs'),     JSON.stringify(state.txs));
+  localStorage.setItem(userKey('linked'),  JSON.stringify(state.linked));
+}
+
+function loadUserData() {
+  const savedBal    = localStorage.getItem(userKey('balance'));
+  const savedTxs    = localStorage.getItem(userKey('txs'));
+  const savedLinked = localStorage.getItem(userKey('linked'));
+  state.balance = savedBal    ? JSON.parse(savedBal)    : 0;
+  state.txs     = savedTxs    ? JSON.parse(savedTxs)    : [];
+  state.linked  = savedLinked ? JSON.parse(savedLinked) : [];
+}
+
+// ── TRANSLATIONS ──────────────────────────────────────────
+const LANGS = [
+  {id:'sw', flag:'🇹🇿', native:'Kiswahili', label:'Kiswahili'},
+  {id:'en', flag:'🇬🇧', native:'English',   label:'English'},
+  {id:'fr', flag:'🇫🇷', native:'Français',  label:'Français'},
+];
+const TR = {
+  appName:'Malipo Yetu',
+  tagline:{sw:'Lipa haraka · Salama · Rahisi',en:'Pay fast · Secure · Easy',fr:'Payer vite · Sécurisé · Facile'},
+  greeting:{sw:'Habari,',en:'Hello,',fr:'Bonjour,'},
+  balance:{sw:'Salio la Akaunti',en:'Account Balance',fr:'Solde du Compte'},
+  addMoney:{sw:'➕ Weka Pesa',en:'➕ Add Money',fr:'➕ Recharger'},
+  send:{sw:'↑ Tuma',en:'↑ Send',fr:'↑ Envoyer'},
+  services:{sw:'Huduma Zote',en:'All Services',fr:'Tous les Services'},
+  recent:{sw:'Malipo ya Karibuni',en:'Recent Payments',fr:'Paiements Récents'},
+  home:{sw:'Nyumbani',en:'Home',fr:'Accueil'},
+  wallet:{sw:'Pochi',en:'Wallet',fr:'Portefeuille'},
+  history:{sw:'Historia',en:'History',fr:'Historique'},
+  profile:{sw:'Akaunti',en:'Account',fr:'Compte'},
+  login:{sw:'Ingia Akaunti',en:'Login',fr:'Se Connecter'},
+  loggingIn:{sw:'Inaingia...',en:'Logging in...',fr:'Connexion...'},
+  newAcc:{sw:'Fungua Akaunti Mpya',en:'Create New Account',fr:'Créer un Compte'},
+  forgotPin:{sw:'Umesahau PIN?',en:'Forgot PIN?',fr:'PIN oublié?'},
+  phone:{sw:'Nambari ya Simu',en:'Phone Number',fr:'Numéro de Téléphone'},
+  pin:{sw:'Nambari ya Siri (PIN)',en:'Secret PIN',fr:'Code PIN Secret'},
+  fullName:{sw:'Jina Kamili',en:'Full Name',fr:'Nom Complet'},
+  confirmPin:{sw:'Thibitisha PIN',en:'Confirm PIN',fr:'Confirmer PIN'},
+  register:{sw:'Maliza Usajili',en:'Complete Registration',fr:'Terminer Inscription'},
+  cont:{sw:'Endelea →',en:'Continue →',fr:'Continuer →'},
+  back:{sw:'← Rudi',en:'← Back',fr:'← Retour'},
+  chooseLang:{sw:'Chagua Lugha',en:'Choose Language',fr:'Choisir la Langue'},
+  langSaved:{sw:'✓ Lugha imehifadhiwa!',en:'✓ Language saved!',fr:'✓ Langue sauvegardée!'},
+  walletTitle:{sw:'Pochi Yangu',en:'My Wallet',fr:'Mon Portefeuille'},
+  walletSub:{sw:'Simamia akaunti zako zote mahali pamoja',en:'Manage all your accounts in one place',fr:'Gérez tous vos comptes en un seul endroit'},
+  totalBal:{sw:'JUMLA YA AKAUNTI ZOTE',en:'TOTAL ACROSS ALL ACCOUNTS',fr:'TOTAL DE TOUS LES COMPTES'},
+  accLinked:{sw:'akaunti zimeunganishwa',en:'accounts linked',fr:'comptes liés'},
+  myAcc:{sw:'AKAUNTI YANGU',en:'MY ACCOUNT',fr:'MON COMPTE'},
+  linkedLbl:{sw:'ZIMEUNGANISHWA',en:'LINKED',fr:'LIÉS'},
+  addAcc:{sw:'ONGEZA AKAUNTI',en:'ADD ACCOUNT',fr:'AJOUTER UN COMPTE'},
+  bankAcc:{sw:'Akaunti ya Benki',en:'Bank Account',fr:'Compte Bancaire'},
+  mobileAcc:{sw:'Pesa ya Simu',en:'Mobile Money',fr:'Mobile Money'},
+  bankSub:{sw:'CRDB, NMB, KCB na zaidi',en:'CRDB, NMB, KCB and more',fr:'CRDB, NMB, KCB et plus'},
+  mobileSub:{sw:'M-Pesa, Airtel, Tigo na zaidi',en:'M-Pesa, Airtel, Tigo and more',fr:'M-Pesa, Airtel, Tigo et plus'},
+  linkBank:{sw:'🏦 Unganisha Benki',en:'🏦 Link Bank',fr:'🏦 Lier Banque'},
+  linkMobile:{sw:'📲 Unganisha Simu',en:'📲 Link Mobile Money',fr:'📲 Lier Mobile Money'},
+  chooseBank:{sw:'Chagua benki yako:',en:'Choose your bank:',fr:'Choisissez votre banque:'},
+  chooseMobile:{sw:'Chagua mtoa huduma wako:',en:'Choose your provider:',fr:'Choisissez votre opérateur:'},
+  accNum:{sw:'Nambari ya Akaunti ya Benki',en:'Bank Account Number',fr:'Numéro de Compte Bancaire'},
+  ownerName:{sw:'Jina la Mmiliki',en:'Account Holder Name',fr:'Nom du Titulaire'},
+  mobileNum:{sw:'Nambari ya Simu Iliyosajiliwa',en:'Registered Phone Number',fr:'Numéro Enregistré'},
+  secNote:{sw:'🔐 Taarifa zako zinalindwa kwa usimbaji wa hali ya juu (256-bit encryption).',en:'🔐 Your data is protected with 256-bit encryption.',fr:'🔐 Vos données sont protégées par un chiffrement 256 bits.'},
+  confirmDets:{sw:'THIBITISHA MAELEZO',en:'CONFIRM DETAILS',fr:'CONFIRMER LES DÉTAILS'},
+  accType:{sw:'Aina',en:'Type',fr:'Type'},
+  provLbl:{sw:'Mtoa Huduma',en:'Provider',fr:'Fournisseur'},
+  numLbl:{sw:'Nambari',en:'Number',fr:'Numéro'},
+  otpNote:{sw:'Baada ya kukubali, SMS ya uthibitisho itatumwa kwa nambari yako ya simu.',en:'After confirming, a verification SMS will be sent to your phone.',fr:'Après confirmation, un SMS de vérification sera envoyé.'},
+  linkBtn:{sw:'🔗 Unganisha Akaunti',en:'🔗 Link Account',fr:'🔗 Lier le Compte'},
+  linking:{sw:'Inaunganisha...',en:'Linking...',fr:'Liaison...'},
+  linkedTag:{sw:'✓ Imeunganishwa',en:'✓ Linked',fr:'✓ Lié'},
+  remove:{sw:'✕ Ondoa',en:'✕ Remove',fr:'✕ Supprimer'},
+  linkOk:{sw:'Imeunganishwa!',en:'Linked!',fr:'Lié!'},
+  linkOkSub:{sw:'imeunganishwa kwa akaunti yako ya Malipo Yetu.',en:'has been linked to your Malipo Yetu account.',fr:'a été lié à votre compte Malipo Yetu.'},
+  backWallet:{sw:'🏦 Rudi Kwenye Pochi',en:'🏦 Back to Wallet',fr:'🏦 Retour au Portefeuille'},
+  walletTip:{sw:'💡 Ukiunganisha akaunti yako ya benki au simu, unaweza kulipa moja kwa moja bila kuweka pesa kwenye Malipo Yetu kwanza.',en:'💡 Link your bank or mobile money account to pay directly without loading money first.',fr:'💡 Liez votre compte pour payer directement sans recharger d\'abord.'},
+  amtLbl:{sw:'KIASI (TZS)',en:'AMOUNT (TZS)',fr:'MONTANT (TZS)'},
+  payMeth:{sw:'NJIA YA MALIPO',en:'PAYMENT METHOD',fr:'MÉTHODE DE PAIEMENT'},
+  paying:{sw:'Inalipia...',en:'Processing...',fr:'Traitement...'},
+  fillAll:{sw:'Jaza Taarifa Zote',en:'Fill All Details',fr:'Remplissez tous les champs'},
+  summary:{sw:'MUHTASARI',en:'SUMMARY',fr:'RÉSUMÉ'},
+  fee:{sw:'Ada (0.5%)',en:'Fee (0.5%)',fr:'Frais (0.5%)'},
+  total:{sw:'JUMLA',en:'TOTAL',fr:'TOTAL'},
+  sendMoney:{sw:'Tuma Pesa',en:'Send Money',fr:'Envoyer de l\'Argent'},
+  sendSub:{sw:'Tuma kwa mtu yeyote haraka',en:'Send to anyone instantly',fr:'Envoyez à n\'importe qui'},
+  quickCont:{sw:'Mawasiliano ya Haraka',en:'Quick Contacts',fr:'Contacts Rapides'},
+  sendingTo:{sw:'Unatuma kwa',en:'Sending to',fr:'Envoi à'},
+  note:{sw:'Maelezo (si lazima)',en:'Note (optional)',fr:'Note (facultatif)'},
+  confirmTx:{sw:'THIBITI MUAMALA',en:'CONFIRM TRANSACTION',fr:'CONFIRMER LA TRANSACTION'},
+  totalFrom:{sw:'Jumla Kutoka Kwako',en:'Total From You',fr:'Total de Votre Compte'},
+  sendBtn:{sw:'↗️ Tuma',en:'↗️ Send',fr:'↗️ Envoyer'},
+  sending:{sw:'Inatuma...',en:'Sending...',fr:'Envoi...'},
+  filterAll:{sw:'Yote',en:'All',fr:'Tous'},
+  filterPay:{sw:'Malipo',en:'Payments',fr:'Paiements'},
+  filterSend:{sw:'Tuma',en:'Sent',fr:'Envoyés'},
+  successPay:{sw:'Malipo Yamefanikiwa!',en:'Payment Successful!',fr:'Paiement Réussi!'},
+  successSend:{sw:'Pesa Imetumwa!',en:'Money Sent!',fr:'Argent Envoyé!'},
+  successLinkTitle:{sw:'Imeunganishwa!',en:'Account Linked!',fr:'Compte Lié!'},
+  backHome:{sw:'🏠 Rudi Nyumbani',en:'🏠 Back Home',fr:'🏠 Retour Accueil'},
+  receipt:{sw:'📄 Pakua Risiti',en:'📄 Download Receipt',fr:'📄 Télécharger Reçu'},
+  verified:{sw:'✓ Akaunti Iliothibitishwa',en:'✓ Verified Account',fr:'✓ Compte Vérifié'},
+  mainWallet:{sw:'Akaunti Kuu',en:'Main Account',fr:'Compte Principal'},
+  myInfo:{sw:'Taarifa Zangu',en:'My Profile',fr:'Mon Profil'},
+  security:{sw:'Usalama & PIN',en:'Security & PIN',fr:'Sécurité & PIN'},
+  payMethods:{sw:'Njia za Malipo',en:'Payment Methods',fr:'Méthodes de Paiement'},
+  notifs:{sw:'Arifa',en:'Notifications',fr:'Notifications'},
+  langMenu:{sw:'Lugha',en:'Language',fr:'Langue'},
+  help:{sw:'Msaada',en:'Help & Support',fr:'Aide & Support'},
+  logout:{sw:'🚪 Toka (Logout)',en:'🚪 Logout',fr:'🚪 Déconnexion'},
+  svcUmeme:{sw:'Umeme',en:'Electricity',fr:'Électricité'},
+  svcMaji:{sw:'Maji',en:'Water',fr:'Eau'},
+  svcVocha:{sw:'Vocha',en:'Airtime',fr:'Crédit Tél.'},
+  svcTv:{sw:'TV/DStv',en:'TV/DStv',fr:'TV/DStv'},
+  svcData:{sw:'Data',en:'Data',fr:'Données'},
+  svcBima:{sw:'Bima',en:'Insurance',fr:'Assurance'},
+  svcShule:{sw:'Ada ya Shule',en:'School Fees',fr:'Frais Scolaires'},
+  svcKodi:{sw:'Kodi ya Nyumba',en:'Rent',fr:'Loyer'},
+  txNum:{sw:'Nambari ya Muamala',en:'Transaction ID',fr:'ID Transaction'},
+  txTime:{sw:'Wakati',en:'Time',fr:'Heure'},
+  txStatus:{sw:'Hali',en:'Status',fr:'Statut'},
+  txOk:{sw:'✅ Imefanikiwa',en:'✅ Successful',fr:'✅ Réussi'},
+};
+function t(key){ const v=TR[key]; return typeof v==='object'?(v[state.lang]||v.sw):v; }
+
+// ── DATA ──────────────────────────────────────────────────
+const BANKS=[
+  {id:'crdb',name:'CRDB Bank',logo:'🏦',color:'#E53935',detail:'Tanzania'},
+  {id:'nmb', name:'NMB Bank', logo:'🏛️',color:'#1565C0',detail:'Tanzania'},
+  {id:'kcb', name:'KCB Bank', logo:'🏢',color:'#2E7D32',detail:'KE / TZ'},
+  {id:'absa',name:'ABSA Bank',logo:'🔴',color:'#C62828',detail:'TZ / KE'},
+  {id:'sc',  name:'Standard Chartered',logo:'🌐',color:'#1A237E',detail:'TZ/KE/UG'},
+  {id:'eq',  name:'Equity Bank',logo:'🟠',color:'#E65100',detail:'KE / UG'},
+];
+const MOBILES=[
+  {id:'mpesa',  name:'M-Pesa',       logo:'📲',color:'#4CAF50',detail:'Vodacom/Safaricom'},
+  {id:'airtel', name:'Airtel Money', logo:'📶',color:'#F44336',detail:'Airtel'},
+  {id:'tigo',   name:'Tigo Pesa',    logo:'💚',color:'#00BCD4',detail:'Tigo'},
+  {id:'halo',   name:'HaloPesa',     logo:'🟠',color:'#FF9800',detail:'Halotel'},
+];
+const SVCS=[
+  {id:'umeme',key:'svcUmeme',icon:'⚡',color:'#F5C842',bg:'#1F1700',field:'Nambari ya Mita',hint:'01234567890'},
+  {id:'maji', key:'svcMaji', icon:'💧',color:'#5BC8F5',bg:'#001626',field:'Nambari ya Akaunti',hint:'Angalia bili yako'},
+  {id:'vocha',key:'svcVocha',icon:'📱',color:'#1DB954',bg:'#001A0A',field:'Nambari ya Simu',hint:'+255 7XX XXX XXX'},
+  {id:'tv',   key:'svcTv',   icon:'📺',color:'#F5874E',bg:'#1F0A00',field:'Nambari ya Decoder',hint:'Nyuma ya decoder'},
+  {id:'data', key:'svcData', icon:'🌐',color:'#B57BF7',bg:'#120020',field:'Nambari ya Simu',hint:'+255 7XX XXX XXX'},
+  {id:'bima', key:'svcBima', icon:'🛡️',color:'#5BC8A0',bg:'#001A12',field:'Nambari ya Bima',hint:'Nambari ya mwanachama'},
+  {id:'shule',key:'svcShule',icon:'🎓',color:'#F5C842',bg:'#1A1200',field:'Nambari ya Mwanafunzi',hint:'Registration number'},
+  {id:'kodi', key:'svcKodi', icon:'🏠',color:'#F5874E',bg:'#1A0A00',field:'Nambari ya Nyumba',hint:'Nambari ya mkataba'},
+  {id:'zaidi',key:null,      icon:'⊕', color:'#6B8F72',bg:'#111',   field:'',hint:''},
+];
+const CONTACTS=[
+  {name:'Mama',phone:'+255 712 000 001',avatar:'👩🏿'},
+  {name:'Baba',phone:'+255 712 000 002',avatar:'👨🏿'},
+  {name:'Ndugu Ali',phone:'+255 712 000 003',avatar:'👦🏿'},
+  {name:'Bibi Fatuma',phone:'+255 712 000 004',avatar:'👵🏿'},
+];
+
+// ── HELPERS ───────────────────────────────────────────────
+const fmt = n => Number(n).toLocaleString('en-US');
+const now = () => new Date().toLocaleString('sw-TZ',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+const uid = () => Math.random().toString(36).slice(2,8).toUpperCase();
+
+function inp(id,label,placeholder,icon,type='text'){
+  return `<div class="inp-wrap">
+    ${label?`<label class="inp-label">${label}</label>`:''}
+    <div class="inp-row">
+      ${icon?`<span class="inp-icon">${icon}</span>`:''}
+      <input class="inp${icon?'':' no-icon'}" id="${id}" type="${type}" placeholder="${placeholder}" autocomplete="off" oninput="onInput('${id}')">
+    </div>
+  </div>`;
+}
+
+function stepBar(total,current,labels){
+  return `<div class="steps">${Array.from({length:total},(_,i)=>`
+    <div class="step-col">
+      <div class="step-bar${i<current?' done':''}"></div>
+      <div class="step-lbl${i===current-1?' active':''}">${labels[i]}</div>
+    </div>`).join('')}</div>`;
+}
+
+function btn(label,action,cls='btn-primary',id=''){
+  return `<button class="btn ${cls}" ${id?`id="${id}"`:''} onclick="${action}">${label}</button>`;
+}
+
+function backBtn(action){ return `<button class="back-btn" onclick="${action}">${t('back')}</button>`; }
+
+// ── INPUT TRACKING ────────────────────────────────────────
+function onInput(id){ render(); }
+
+function val(id){ const el=document.getElementById(id); return el?el.value.trim():''; }
+
+// ── RENDER ────────────────────────────────────────────────
+function render(){
+  const scr=document.getElementById('screen');
+  const nav=document.getElementById('nav');
+
+  if(state.page==='login'){ nav.style.display='none'; scr.innerHTML=renderLogin(); return; }
+  if(state.page==='register'){ nav.style.display='none'; scr.innerHTML=renderRegister(); return; }
+  if(state.page==='language'){ nav.style.display='none'; scr.innerHTML=renderLanguage(); return; }
+
+  // main
+  if(state.flow){
+    nav.style.display='none';
+    const flows={service:renderService,send:renderSend,success:renderSuccess,linkAcc:renderLinkAcc,linkSuccess:renderLinkSuccess};
+    scr.innerHTML=(flows[state.flow.type]||renderHome)();
+    return;
+  }
+  nav.style.display='flex';
+  nav.innerHTML=renderNav();
+  const tabs={home:renderHome,wallet:renderWallet,history:renderHistory,profile:renderProfile};
+  scr.innerHTML=(tabs[state.tab]||renderHome)();
+}
+
+// ── PI NETWORK AUTH ───────────────────────────────────────
+// piReady: true once Pi.init resolves; piUser: validated user object
+let piReady = false;
+let piUser  = null;
+
+function setPiStatus(msg, isError) {
+  const el = document.getElementById('pi-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = isError ? 'var(--red)' : 'var(--muted)';
+}
+
+function setPiBtnState(loading) {
+  const b = document.getElementById('pi-auth-btn');
+  if (!b) return;
+  b.disabled = loading;
+  b.innerHTML = loading
+    ? `<span class="spin">⟳</span> Inaingia Pi...`
+    : `<img src="https://minepi.com/favicon.ico" style="width:18px;height:18px;border-radius:4px;"> Ingia na Pi Network`;
+}
+
+async function doPiAuth() {
+  setPiBtnState(true);
+  setPiStatus('Inawasiliana na Pi Network...', false);
+  try {
+    // 1. Ensure SDK is initialised (idempotent if already done)
+    if (!piReady) {
+      await Pi.init({ version: '2.0', sandbox: false });
+      piReady = true;
+    }
+
+    // 2. Authenticate – request "username" scope
+    const auth = await Pi.authenticate(['username', 'payments'], onIncompletePayment);
+    const accessToken = auth.accessToken;
+
+    setPiStatus('Inathibitisha na seva...', false);
+
+    // 3. Validate token: call Pi platform /v2/me
+    //    (no API key required for this bearer-token flow)
+    const resp = await fetch('https://api.minepi.com/v2/me', {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+
+    if (!resp.ok) throw new Error(`Pi /v2/me responded ${resp.status}`);
+    const piData = await resp.json();
+
+    // 4. Session established – store user and load their personal data
+    piUser = piData;
+    state.user = {
+      name: piData.username || 'Pi User',
+      phone: '',
+      piUid: piData.uid,
+      accessToken,
+    };
+    loadUserData();   // restore this user's balance, txs, linked accounts
+    state.page = 'main';
+    state.tab  = 'home';
+    render();
+
+  } catch (err) {
+    console.error('Pi auth error:', err);
+    setPiStatus('Imeshindwa kuingia: ' + (err.message || 'Jaribu tena'), true);
+    setPiBtnState(false);
+  }
+}
+
+// Called by Pi SDK when an incomplete payment is found at auth time.
+// We MUST complete (or cancel) it via the backend — never silently ignore it.
+async function onIncompletePayment(payment) {
+  console.warn('Incomplete Pi payment found — completing via backend:', payment.identifier);
+  try {
+    const res = await fetch('/api/payments/complete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      // txid may be present if blockchain confirmed but app crashed before completion
+      body: JSON.stringify({ paymentId: payment.identifier, txid: payment.transaction?.txid || null }),
+    });
+    if (!res.ok) console.error('Backend failed to complete incomplete payment:', await res.text());
+  } catch (err) {
+    console.error('Network error completing incomplete payment:', err);
+  }
+}
+
+// ── LOGIN ─────────────────────────────────────────────────
+function renderLogin(){
+  return `<div class="hdr" style="text-align:center;padding-top:48px;">
+    <div class="logo-box">💳</div>
+    <div class="syne" style="font-size:26px;font-weight:800;margin-bottom:4px;">${t('appName')}</div>
+    <div class="muted f12 mb12">${t('tagline')}</div>
+    <button class="tag" style="cursor:pointer;border:none;font-family:inherit;font-size:12px;" onclick="go('language')">🌍 ${t('langMenu')}</button>
+  </div>
+  <div class="p20">
+
+    <!-- Pi Network sign-in (primary) -->
+    <div class="card mb16" style="padding:22px;text-align:center;">
+      <div style="font-size:36px;margin-bottom:10px;">π</div>
+      <div class="syne" style="font-size:16px;font-weight:700;margin-bottom:6px;">Ingia na Pi Network</div>
+      <div class="muted f12 mb16">Tumia akaunti yako ya Pi Network kuingia salama</div>
+      <button id="pi-auth-btn" class="btn btn-primary" onclick="doPiAuth()">
+        <img src="https://minepi.com/favicon.ico" style="width:18px;height:18px;border-radius:4px;"> Ingia na Pi Network
+      </button>
+      <div id="pi-status" class="muted f12" style="margin-top:10px;min-height:18px;"></div>
+    </div>
+
+    <!-- Divider -->
+    <div class="divider"><div class="divider-line"></div><span style="font-size:12px;color:var(--muted2);">au ingia kwa simu</span><div class="divider-line"></div></div>
+
+    <!-- Phone / PIN fallback -->
+    <div class="card mb14" style="padding:20px;">
+      ${inp('l_phone',t('phone'),'+255 7XX XXX XXX','📱','tel')}
+      ${inp('l_pin',t('pin'),'● ● ● ● ● ●','🔒','password')}
+      <div style="text-align:right;margin-top:-6px;margin-bottom:4px;"><span class="green f12" style="cursor:pointer;">${t('forgotPin')}</span></div>
+    </div>
+    ${btn(t('login'),'doLogin()')}
+    <div class="divider"><div class="divider-line"></div><span style="font-size:12px;color:var(--muted2);">au</span><div class="divider-line"></div></div>
+    ${btn(t('newAcc'),'go("register")','btn btn-ghost')}
+    <div class="center" style="margin-top:20px;">
+      <div class="muted f11 mb10" style="letter-spacing:1px;text-transform:uppercase;">INAKUBALI MALIPO YA</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
+        ${['M-Pesa','Airtel Money','Visa','Mastercard'].map(m=>`<span class="tag" style="background:rgba(107,143,114,.15);border-color:rgba(107,143,114,.4);color:var(--muted);">${m}</span>`).join('')}
+      </div>
+    </div>
+    <div style="height:16px;"></div>
+  </div>`;
+}
+
+function doLogin(){
+  const p=val('l_phone'),pin=val('l_pin');
+  if(!p||pin.length<4) return;
+  const b=document.querySelector('#screen .btn-primary');
+  if(b){b.disabled=true;b.innerHTML=`<span class="spin">⟳</span> ${t('loggingIn')}`;}
+  setTimeout(()=>{
+    state.user={name:'Mtumiaji',phone:p,piUid:'phone_'+p};
+    loadUserData();
+    state.page='main'; state.tab='home';
+    render();
+  },1400);
+}
+
+// ── REGISTER ──────────────────────────────────────────────
+function renderRegister(){
+  const s=state.registerStep;
+  const labels=[t('fullName'),t('phone'),t('pin')];
+  const titles=[t('fullName'),t('phone'),t('pin')];
+  return `<div class="hdr">
+    ${backBtn(s>1?'state.registerStep--;render()':'go("login")')}
+    <div class="syne f22 center mb12">${titles[s-1]}</div>
+    ${stepBar(3,s,labels)}
+  </div>
+  <div class="p20 fade-in">
+    ${s===1?inp('r_name',t('fullName'),'Mfano: Amina Hassan','👤'):''}
+    ${s===2?inp('r_phone',t('phone'),'+255 7XX XXX XXX','📱','tel'):''}
+    ${s===3?inp('r_pin',t('pin'),'● ● ● ● ● ●','🔒','password')+inp('r_pin2',t('confirmPin'),'● ● ● ● ● ●','🔐','password'):''}
+    ${btn(s<3?t('cont'):t('register'),'doRegister()')}
+  </div>`;
+}
+
+function doRegister(){
+  const s=state.registerStep;
+  if(s===1&&!val('r_name')) return;
+  if(s===2&&!val('r_phone')) return;
+  if(s===3){
+    const p=val('r_pin'),p2=val('r_pin2');
+    if(p.length<6||p!==p2) return;
+    state.user={name:val('r_name')||'Amina Hassan',phone:val('r_phone')};
+    state.page='main';state.tab='home';state.registerStep=1;render();return;
+  }
+  state.registerStep++;render();
+}
+
+// ── LANGUAGE ──────────────────────────────────────────────
+function renderLanguage(){
+  const cur=state.langChoice||state.lang;
+  return `<div class="p20">
+    ${backBtn('go("back")')}
+    <div class="syne f22 mb8">${t('chooseLang')}</div>
+    <div class="muted f13 mb22">Select your preferred language</div>
+    ${LANGS.map(l=>`<div class="lang-tile${cur===l.id?' selected':''}" onclick="state.langChoice='${l.id}';render()">
+      <div style="display:flex;align-items:center;gap:16px;">
+        <span style="font-size:34px;">${l.flag}</span>
+        <div>
+          <div style="font-size:16px;font-weight:700;color:var(--text);">${l.native}</div>
+          <div class="muted f12">${l.label}</div>
+        </div>
+      </div>
+      ${cur===l.id?`<div class="lang-check">✓</div>`:''}
+    </div>`).join('')}
+    <div style="height:16px;"></div>
+    ${btn(t('cont'),'saveLang()')}
+  </div>`;
+}
+
+function saveLang(){
+  if(state.langChoice) state.lang=state.langChoice;
+  localStorage.setItem('lang',state.lang);
+  state.langChoice=null;
+  go('back');
+}
+
+// ── NAV ───────────────────────────────────────────────────
+function renderNav(){
+  const tabs=[
+    {id:'home',icon:'🏠',label:t('home')},
+    {id:'wallet',icon:'💳',label:t('wallet'),dot:state.linked.length>0},
+    {id:'history',icon:'📋',label:t('history')},
+    {id:'profile',icon:'👤',label:t('profile')},
+  ];
+  return tabs.map(tab=>`<button class="nav-btn${state.tab===tab.id?' active':''}" onclick="setTab('${tab.id}')">
+    <span class="nav-icon">${tab.icon}</span>
+    ${tab.dot?`<div class="nav-dot"></div>`:''}
+    ${tab.label}
+  </button>`).join('');
+}
+
+function setTab(id){ state.tab=id; state.flow=null; render(); }
+
+// ── HOME ──────────────────────────────────────────────────
+function renderHome(){
+  const bal=fmt(state.balance);
+  const recent=state.txs.slice(0,3);
+  return `<div class="hdr">
+    <div class="row mb18">
+      <div>
+        <div class="muted f12">${t('greeting')}</div>
+        <div class="syne" style="font-size:19px;font-weight:700;">${state.user?.name||'Karibu'} 👋</div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <div style="width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;">🔔</div>
+        <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--gd));display:flex;align-items:center;justify-content:center;font-size:18px;">👩🏿</div>
+      </div>
+    </div>
+    <div class="card-green" style="border-radius:22px;padding:18px;">
+      <div class="row" style="align-items:flex-start;margin-bottom:14px;">
+        <div>
+          <div class="f11 muted mb4" style="letter-spacing:1px;text-transform:uppercase;">${t('balance')}</div>
+          <div class="syne" style="font-size:28px;font-weight:800;margin-bottom:6px;">TZS ${bal}</div>
+          <span class="tag">${t('verified')}</span>
+        </div>
+        <div style="text-align:right;">
+          <div class="muted f11 mb4">Mwezi Huu</div>
+          <div class="red f13" style="font-weight:700;">-TZS 76,000</div>
+          <div class="green f11">↓ Matumizi</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary" style="flex:1;padding:11px;font-size:13px;border-radius:13px;" onclick="setTab('wallet')">${t('addMoney')}</button>
+        <button class="btn btn-ghost" style="flex:1;padding:11px;font-size:13px;border-radius:13px;border-color:rgba(29,185,84,.5);color:var(--green);" onclick="startFlow('send')">${t('send')}</button>
+      </div>
+    </div>
+  </div>
+  <div class="p20" style="padding-top:18px;">
+    <div class="row mb12">
+      <div class="syne f15">${t('services')}</div>
+      <span class="green f12">Ona Zote →</span>
+    </div>
+    <div class="svc-grid mb22">
+      ${SVCS.map(s=>`<div class="svc-card" style="background:${s.bg};border-color:${s.color}25;" onclick="openService('${s.id}')">
+        <span class="svc-icon">${s.icon}</span>
+        <span class="svc-label" style="color:${s.color};">${s.key?t(s.key):'Zaidi'}</span>
+      </div>`).join('')}
+    </div>
+    <div class="row mb12">
+      <div class="syne f15">${t('recent')}</div>
+      <span class="green f12">Yote →</span>
+    </div>
+    ${recent.map(tx=>`<div class="card tx-tile mb8">
+      <div class="tx-ico" style="background:rgba(245,200,66,.18);border:1px solid rgba(245,200,66,.3);">${tx.icon}</div>
+      <div class="tx-info"><div class="tx-name">${tx.name}</div><div class="tx-date">${tx.date}</div></div>
+      <div style="text-align:right;"><div class="tx-amt">-TZS ${fmt(tx.amt)}</div><div class="tx-ok">✓ Ok</div></div>
+    </div>`).join('')}
+  </div>`;
+}
+
+// ── WALLET ────────────────────────────────────────────────
+function renderWallet(){
+  const total=state.balance+state.linked.reduce((s,a)=>s+(a.type==='bank'?85000:12000),0);
+  return `<div class="p20">
+    <div class="syne f22 mb4">${t('walletTitle')}</div>
+    <div class="muted f13 mb20">${t('walletSub')}</div>
+
+    <div class="card-green mb22" style="border-radius:22px;padding:18px;box-shadow:0 0 30px var(--glow);">
+      <div class="f11 muted mb8" style="letter-spacing:1px;text-transform:uppercase;">${t('totalBal')}</div>
+      <div class="syne" style="font-size:30px;font-weight:800;margin-bottom:6px;">TZS ${fmt(total)}</div>
+      <div class="muted f12">${state.linked.length+1} ${t('accLinked')}</div>
+    </div>
+
+    <div class="f11 muted mb10" style="letter-spacing:1px;text-transform:uppercase;">${t('myAcc')}</div>
+    <div class="card mb20" style="border-color:rgba(29,185,84,.35);">
+      <div class="row">
+        <div style="display:flex;align-items:center;gap:13px;">
+          <div style="width:46px;height:46px;border-radius:15px;background:linear-gradient(135deg,var(--green),var(--gd));display:flex;align-items:center;justify-content:center;font-size:22px;">💳</div>
+          <div>
+            <div class="f15">${t('appName')} Wallet</div>
+            <div class="muted f11">${t('mainWallet')}</div>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div class="green" style="font-size:15px;font-weight:800;">TZS ${fmt(state.balance)}</div>
+          <span class="tag" style="font-size:10px;">✓ Kuu</span>
+        </div>
+      </div>
+    </div>
+
+    ${state.linked.length?`<div class="f11 muted mb10" style="letter-spacing:1px;text-transform:uppercase;">${t('linkedLbl')}</div>
+    ${state.linked.map(acc=>`<div class="card mb10" style="border-color:${acc.color}30;">
+      <div class="row">
+        <div style="display:flex;align-items:center;gap:13px;">
+          <div style="width:46px;height:46px;border-radius:15px;background:${acc.color}20;border:1px solid ${acc.color}40;display:flex;align-items:center;justify-content:center;font-size:22px;">${acc.logo}</div>
+          <div>
+            <div class="f15">${acc.name}</div>
+            <div class="muted f11">•••• ${acc.num.slice(-4)}</div>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div class="f15" style="font-weight:700;">TZS ${fmt(acc.type==='bank'?85000:12000)}</div>
+          <div class="red f11" style="cursor:pointer;margin-top:4px;" onclick="removeLinked('${acc.id}')">${t('remove')}</div>
+        </div>
+      </div>
+    </div>`).join('')}`:''}
+
+    <div class="f11 muted mb12" style="letter-spacing:1px;text-transform:uppercase;">${t('addAcc')}</div>
+    <div style="display:flex;gap:10px;margin-bottom:14px;">
+      <button class="add-btn" style="border-color:rgba(91,200,245,.4);" onclick="startLink('bank')">
+        <span class="add-btn-icon">🏦</span>
+        <span class="add-btn-label" style="color:var(--blue);">${t('bankAcc')}</span>
+        <span class="add-btn-sub">${t('bankSub')}</span>
+      </button>
+      <button class="add-btn" style="border-color:rgba(29,185,84,.4);" onclick="startLink('mobile')">
+        <span class="add-btn-icon">📱</span>
+        <span class="add-btn-label" style="color:var(--green);">${t('mobileAcc')}</span>
+        <span class="add-btn-sub">${t('mobileSub')}</span>
+      </button>
+    </div>
+    <div class="tip tip-gold"><span style="color:var(--gold);font-size:12px;line-height:1.7;">${t('walletTip')}</span></div>
+    <div style="height:16px;"></div>
+  </div>`;
+}
+
+function removeLinked(id){ state.linked=state.linked.filter(a=>a.id!==id); saveUserData(); render(); }
+
+// ── LINK ACCOUNT ──────────────────────────────────────────
+function startLink(type){ state.linkType=type; state.linkStep=1; state.linkSel=null; startFlow('linkAcc'); }
+
+function renderLinkAcc(){
+  const type=state.linkType;
+  const list=type==='bank'?BANKS:MOBILES;
+  const s=state.linkStep;
+  const labels=[t('stepChoose'),t('stepInfo'),t('stepConfirm')];
+  const stepChoose=`<span style="display:none">${t('chooseLang')}</span>`; // ensure translations available
+  const title=type==='bank'?t('linkBank'):t('linkMobile');
+
+  let body='';
+  if(s===1){
+    body=`<div class="muted f12 mb14">${type==='bank'?t('chooseBank'):t('chooseMobile')}</div>
+    ${list.map(p=>{
+      const already=state.linked.some(a=>a.id===p.id);
+      const sel=state.linkSel===p.id;
+      return `<div class="prov-tile${sel?' selected':''}${already?' linked':''}" onclick="${already?'':`selectProv('${p.id}')`}">
+        <div style="display:flex;align-items:center;">
+          <div class="prov-logo" style="background:${p.color}20;border:1px solid ${p.color}30;">${p.logo}</div>
+          <div><div class="prov-name">${p.name}</div><div class="prov-sub">${p.detail}</div></div>
+        </div>
+        ${already?`<span class="tag" style="font-size:10px;">${t('linkedTag')}</span>`:sel?`<span style="color:${p.color};font-size:20px;">✓</span>`:''}
+      </div>`;
+    }).join('')}
+    ${btn(t('cont'),`linkNext()`,'btn-primary','')}`;
+  }
+  if(s===2){
+    body=`${type==='bank'
+      ?inp('lk_acc',t('accNum'),'0150123456789','🏦','tel')+inp('lk_own',t('ownerName'),'Amina Hassan','👤')
+      :inp('lk_acc',t('mobileNum'),'+255 7XX XXX XXX','📱','tel')}
+    <div class="tip tip-gold mb14"><span style="color:var(--gold);font-size:12px;line-height:1.6;">${t('secNote')}</span></div>
+    ${btn(t('cont'),'linkNext()')}`;
+  }
+  if(s===3){
+    const prov=list.find(p=>p.id===state.linkSel);
+    body=`<div class="card mb18" style="border-color:rgba(29,185,84,.3);">
+      <div class="f11 muted mb14" style="letter-spacing:1px;text-transform:uppercase;">${t('confirmDets')}</div>
+      ${[[t('accType'),type==='bank'?t('bankAcc'):t('mobileAcc')],[t('provLbl'),prov?.name||''],[t('numLbl'),val('lk_acc')]].map(([k,v])=>`<div class="sum-row"><span class="sum-key">${k}</span><span class="sum-val">${v}</span></div>`).join('')}
+      <div class="sep"></div>
+      <div class="muted f12" style="line-height:1.7;margin-top:8px;">${t('otpNote')}</div>
+    </div>
+    <div id="link-btn">${btn(t('linkBtn'),'doLink()')}</div>`;
+  }
+
+  return `<div class="hdr">
+    ${backBtn(`linkBack()`)}
+    <div class="syne f18 mb14">${title}</div>
+    ${stepBar(3,s,labels)}
+  </div>
+  <div class="p20 fade-in">${body}</div>`;
+}
+
+function selectProv(id){ state.linkSel=id; render(); }
+function linkNext(){
+  if(state.linkStep===1&&!state.linkSel) return;
+  if(state.linkStep===2&&!val('lk_acc')) return;
+  state.linkStep++; render();
+}
+function linkBack(){
+  if(state.linkStep>1){state.linkStep--;render();}
+  else{state.flow=null;state.tab='wallet';render();}
+}
+function doLink(){
+  const btn=document.getElementById('link-btn');
+  if(btn) btn.innerHTML=`<button class="btn btn-primary" disabled><span class="spin">⟳</span> ${t('linking')}</button>`;
+  setTimeout(()=>{
+    const list=state.linkType==='bank'?BANKS:MOBILES;
+    const prov=list.find(p=>p.id===state.linkSel);
+    state.linked.push({id:prov.id,name:prov.name,logo:prov.logo,color:prov.color,type:state.linkType,num:val('lk_acc')});
+    saveUserData();
+    state.flow={type:'linkSuccess',provName:prov.name};
+    render();
+  },1700);
+}
+
+function renderLinkSuccess(){
+  return `<div style="min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;text-align:center;">
+    <div class="success-circle">🔗</div>
+    <div class="syne" style="font-size:24px;font-weight:800;margin-bottom:8px;">${t('successLinkTitle')}</div>
+    <div class="muted f14" style="line-height:1.8;margin-bottom:28px;">${state.flow.provName} ${t('linkOkSub')}</div>
+    ${btn(t('backWallet'),`state.flow=null;setTab('wallet')`)}
+  </div>`;
+}
+
+// ── SERVICE PAYMENT ───────────────────────────────────────
+function openService(id){ if(id==='zaidi') return; state.selService=id; startFlow('service'); }
+
+function renderService(){
+  const svc=SVCS.find(s=>s.id===state.selService);
+  if(!svc) return '';
+  const presets=['1,000','2,000','5,000','10,000','20,000','50,000'];
+  const selPreset=state._preset||'';
+
+  return `<div class="hdr">
+    ${backBtn(`state.flow=null;render()`)}
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div style="width:52px;height:52px;border-radius:18px;background:${svc.color}20;border:1px solid ${svc.color}45;display:flex;align-items:center;justify-content:center;font-size:26px;">${svc.icon}</div>
+      <div>
+        <div class="syne f18">${svc.key?t(svc.key):''}</div>
+        <div class="muted f12 mt4">${svc.hint}</div>
+      </div>
+    </div>
+  </div>
+  <div class="p20 fade-in">
+    ${inp('svc_ref',svc.field,svc.hint,svc.icon)}
+    <div class="inp-label mb8">${t('amtLbl')}</div>
+    <div class="presets mb10">
+      ${presets.map(p=>`<div class="preset${selPreset===p?' active':''}" onclick="selectPreset('${p}')">${p}</div>`).join('')}
+    </div>
+    ${inp('svc_amt','','Au andika kiasi...','💰','tel')}
+    <!-- Pi Network is the sole payment method for this app -->
+    <div class="tip" style="background:rgba(29,185,84,.07);border:1px solid rgba(29,185,84,.3);margin-bottom:18px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:24px;">π</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--green);">Pi Network</div>
+          <div class="muted f11">Malipo salama kupitia Pi Browser yako</div>
+        </div>
+        <span style="margin-left:auto;" class="tag">✓ Imechaguliwa</span>
+      </div>
+    </div>
+    <div id="svc-summary"></div>
+    <div id="svc-pay-btn"><button class="btn btn-primary" disabled>${t('fillAll')}</button></div>
+  </div>
+  <script>
+    (function(){
+      const refEl=document.getElementById('svc_ref');
+      const amtEl=document.getElementById('svc_amt');
+      function update(){
+        const ref=refEl?.value.trim();
+        const amt=amtEl?.value.trim();
+        const n=parseFloat((amt||'0').replace(/,/g,''))||0;
+        const fee=Math.max(200,Math.round(n*0.005));
+        const total=n+fee;
+        const sum=document.getElementById('svc-summary');
+        const payBtn=document.getElementById('svc-pay-btn');
+        if(ref&&amt&&n>0){
+          if(sum) sum.innerHTML=\`<div class="card mb16" style="border-color:rgba(29,185,84,.3);">
+            \${[['Huduma','${svc.key?t(svc.key):''}'],['Kiasi','TZS '+amt],['Ada','TZS '+fee],['JUMLA','TZS '+total.toLocaleString()]].map(([k,v])=>\`<div class="sum-row" style="margin-bottom:8px;"><span class="sum-key">\${k}</span><span class="sum-val\${k==='JUMLA'?' green':''}">\${v}</span></div>\`).join('')}
+            <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);">Bei ya Pi itakapoombwa kutoka seva (inabadilika kwa wakati halisi)</div>
+          </div>\`;
+          if(payBtn) payBtn.innerHTML='<button class="btn btn-primary" onclick="doPayService()"><span style="font-size:18px;line-height:1;">π</span> Lipa kwa Pi — TZS '+total.toLocaleString()+'</button>';
+        } else {
+          if(sum) sum.innerHTML='';
+          if(payBtn) payBtn.innerHTML='<button class="btn btn-primary" disabled>${t('fillAll')}</button>';
+        }
+      }
+      refEl?.addEventListener('input',update);
+      amtEl?.addEventListener('input',update);
+    })();
+  <\/script>`;
+}
+
+function selectPreset(p){
+  state._preset=p;
+  render();
+  setTimeout(()=>{
+    const el=document.getElementById('svc_amt');
+    if(el){el.value=p;el.dispatchEvent(new Event('input'));}
+  },50);
+}
+
+async function doPayService(){
+  const ref = document.getElementById('svc_ref')?.value.trim();
+  const amt = document.getElementById('svc_amt')?.value.trim();
+  if (!ref || !amt) return;
+
+  const tzs   = parseFloat(amt.replace(/,/g, '')) || 0;
+  const fee   = Math.max(200, Math.round(tzs * 0.005));
+  const total = tzs + fee;
+  const svc   = SVCS.find(s => s.id === state.selService);
+
+  const payBtn = document.querySelector('#svc-pay-btn .btn');
+  function resetBtn() {
+    if (payBtn) { payBtn.disabled = false; payBtn.innerHTML = `π Lipa kwa Pi — TZS ${fmt(total)}`; }
+  }
+
+  if (payBtn) { payBtn.disabled = true; payBtn.innerHTML = `<span class="spin">⟳</span> ${t('paying')}`; }
+
+  // ── 1. Ensure Pi SDK is initialised before any Pi.createPayment call ──
+  if (!piReady) {
+    try {
+      await Pi.init({ version: '2.0', sandbox: false });
+      piReady = true;
+    } catch(e) {
+      alert('Pi SDK haijapatikana. Tumia Pi Browser.');
+      resetBtn(); return;
+    }
+  }
+
+  // ── 2. Fetch the canonical Pi amount from the backend ──
+  //    This prevents the client from spoofing the price.
+  let piAmount;
+  try {
+    const rateRes = await fetch('/api/payments/quote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tzs_amount: total, service: state.selService, serviceRef: ref }),
+    });
+    if (!rateRes.ok) throw new Error(`Quote error ${rateRes.status}`);
+    const { pi_amount } = await rateRes.json();
+    piAmount = pi_amount;
+  } catch(e) {
+    console.error('Failed to fetch Pi quote:', e);
+    alert('Imeshindwa kupata bei ya Pi. Tafadhali jaribu tena.');
+    resetBtn(); return;
+  }
+
+  // ── 3. Build payment payload ──
+  const paymentData = {
+    amount:   piAmount,
+    memo:     `Malipo Yetu — ${svc ? t(svc.key) : state.selService} (${ref})`,
+    metadata: {
+      service:    state.selService,
+      serviceRef: ref,
+      tzs_amount: total,
+      piUid:      state.user?.piUid || '',
+    },
+  };
+
+  // ── 4. Create payment with all required callbacks ──
+  Pi.createPayment(paymentData, {
+
+    // Step A — SDK issues paymentId → server must approve before blockchain signs
+    onReadyForServerApproval(paymentId) {
+      fetch('/api/payments/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentId }),
+      }).catch(err => {
+        console.error('Approval POST failed:', err);
+        // Do NOT reset button here — the SDK is still waiting; let onError handle UI
+      });
+    },
+
+    // Step B — Blockchain confirms; server must complete to transfer Pi to app wallet
+    onReadyForServerCompletion(paymentId, txid) {
+      fetch('/api/payments/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentId, txid }),
+      })
+      .then(r => { if (!r.ok) throw new Error(`Complete failed ${r.status}`); return r.json(); })
+      .then(() => {
+        // Fully settled — record locally and navigate to success
+        state.txs.unshift({
+          id:       paymentId,
+          icon:     svc ? svc.icon : '💳',
+          name:     svc ? t(svc.key) : state.selService,
+          ref,
+          amt:      total,
+          type:     'pay',
+          date:     'Sasa hivi',
+          piAmount,
+          txid,
+        });
+        saveUserData();
+        state._preset = ''; state._method = 'pi';
+        state.successType = 'pay';
+        startFlow('success');
+      })
+      .catch(err => {
+        console.error('Completion error:', err);
+        alert('Malipo yamefanikiwa kwenye blockchain lakini kuna hitilafu ya seva. Wasiliana na msaada wetu na nambari: ' + txid);
+        resetBtn();
+      });
+    },
+
+    onCancel(paymentId) {
+      console.log('Pi payment cancelled by user:', paymentId);
+      resetBtn();
+    },
+
+    onError(error, payment) {
+      console.error('Pi payment error:', error, payment);
+      alert('Hitilafu ya malipo: ' + (error?.message || error));
+      resetBtn();
+    },
+  });
+}
+
+// ── SEND MONEY ────────────────────────────────────────────
+function renderSend(){
+  const step=state.sendStep||1;
+  const labels=[t('recipient'),t('amtLbl'),t('stepConfirm')];
+  const presets=['5,000','10,000','20,000','50,000','100,000','200,000'];
+
+  let body='';
+  if(step===1){
+    body=`${inp('sd_phone',t('phone'),'+255 7XX XXX XXX','📱','tel')}
+    <div class="muted f12 mb10">${t('quickCont')}</div>
+    ${CONTACTS.map(c=>`<div class="contact${state.sendPhone===c.phone?' selected':''}" onclick="selectContact('${c.phone}')">
+      <div class="contact-avatar">${c.avatar}</div>
+      <div style="flex:1;"><div class="contact-name">${c.name}</div><div class="contact-phone">${c.phone}</div></div>
+      ${state.sendPhone===c.phone?'<span style="color:var(--green);font-size:20px;">✓</span>':''}
+    </div>`).join('')}
+    <div style="height:16px;"></div>
+    ${btn(t('cont'),'sendNext()')}`;
+  }
+  if(step===2){
+    body=`<div class="card mb16"><div style="display:flex;align-items:center;gap:12px;"><span style="font-size:22px;">📲</span><div><div class="muted f11">${t('sendingTo')}</div><div class="f15">${state.sendPhone}</div></div></div></div>
+    ${inp('sd_amt',t('amtLbl'),'Andika kiasi...','💰','tel')}
+    <div class="presets mb14">${presets.map(p=>`<div class="preset" onclick="setSendAmt('${p}')" style="font-size:12px;">${p}</div>`).join('')}</div>
+    ${inp('sd_note',t('note'),'Mfano: Pesa ya nauli...','📝')}
+    ${btn(t('cont'),'sendNext()')}`;
+  }
+  if(step===3){
+    const amt=state._sendAmt||'';
+    const note=state._sendNote||'';
+    const n=parseFloat((amt||'0').replace(/,/g,''))||0;
+    body=`<div class="card mb20" style="border-color:rgba(29,185,84,.3);">
+      <div class="f11 muted mb14" style="letter-spacing:1px;">${t('confirmTx')}</div>
+      ${[[t('sendingTo'),state.sendPhone],[t('amtLbl'),'TZS '+amt],['Ada','TZS 200'],[t('totalFrom'),'TZS '+fmt(n+200)],(note?[t('note'),note]:null)].filter(Boolean).map(([k,v])=>`<div class="sum-row"><span class="sum-key">${k}</span><span class="sum-val${k===t('totalFrom')?' green':''}">${v}</span></div>`).join('')}
+    </div>
+    <div id="send-btn">${btn(`${t('sendBtn')} TZS ${amt}`,'doSend()')}</div>`;
+  }
+
+  return `<div class="hdr">
+    ${backBtn(step>1?`state.sendStep--;render()`:`state.flow=null;render()`)}
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
+      <div style="width:52px;height:52px;border-radius:18px;background:rgba(91,200,245,.2);border:1px solid rgba(91,200,245,.45);display:flex;align-items:center;justify-content:center;font-size:26px;">↗️</div>
+      <div><div class="syne f18">${t('sendMoney')}</div><div class="muted f12">${t('sendSub')}</div></div>
+    </div>
+    ${stepBar(3,step,labels)}
+  </div>
+  <div class="p20 fade-in">${body}</div>`;
+}
+
+function selectContact(phone){
+  state.sendPhone=phone;
+  const el=document.getElementById('sd_phone');
+  if(el) el.value=phone;
+  render();
+}
+function setSendAmt(v){
+  const el=document.getElementById('sd_amt');
+  if(el) el.value=v;
+}
+function sendNext(){
+  const step=state.sendStep||1;
+  if(step===1){
+    const p=document.getElementById('sd_phone')?.value.trim()||state.sendPhone;
+    if(!p) return;
+    state.sendPhone=p;
+  }
+  if(step===2){
+    const amt=document.getElementById('sd_amt')?.value.trim();
+    if(!amt) return;
+    state._sendAmt=amt;
+    state._sendNote=document.getElementById('sd_note')?.value.trim()||'';
+  }
+  if(step===3){ doSend(); return; }
+  state.sendStep=(state.sendStep||1)+1; render();
+}
+function doSend(){
+  const btn=document.getElementById('send-btn');
+  if(btn) btn.innerHTML=`<button class="btn btn-primary" disabled><span class="spin">⟳</span> ${t('sending')}</button>`;
+  setTimeout(()=>{
+    const n=parseFloat((state._sendAmt||'0').replace(/,/g,''))||0;
+    state.balance=Math.max(0,state.balance-(n+200));
+    state.txs.unshift({id:uid(),icon:'↗️',name:'Tuma → '+state.sendPhone,ref:state.sendPhone,amt:n+200,type:'send',date:'Sasa hivi'});
+    saveUserData();
+    state.sendStep=1;state.sendPhone='';state._sendAmt='';state._sendNote='';
+    state.successType='send';startFlow('success');
+  },1600);
+}
+
+// ── HISTORY ───────────────────────────────────────────────
+function renderHistory(){
+  const f=state.filter||'all';
+  const shown=f==='all'?state.txs:state.txs.filter(tx=>f==='send'?tx.type==='send':tx.type==='pay');
+  const colors={pay:'#F5C842',send:'#5BC8F5'};
+  return `<div class="p20">
+    <div class="syne f22 mb4">${t('history')}</div>
+    <div class="muted f13 mb18">Muamala wote uko hapa</div>
+    <div class="filters">
+      ${[['all',t('filterAll')],['pay',t('filterPay')],['send',t('filterSend')]].map(([id,lbl])=>`<button class="filter-btn${f===id?' active':''}" onclick="state.filter='${id}';render()">${lbl}</button>`).join('')}
+    </div>
+    ${shown.map(tx=>`<div class="card tx-tile mb8">
+      <div class="tx-ico" style="background:${colors[tx.type]||'#F5C842'}20;border:1px solid ${colors[tx.type]||'#F5C842'}30;">${tx.icon}</div>
+      <div class="tx-info"><div class="tx-name">${tx.name}</div><div class="tx-date">${tx.ref} · ${tx.date}</div></div>
+      <div style="text-align:right;"><div class="tx-amt">-TZS ${fmt(tx.amt)}</div><span class="tag" style="font-size:10px;">✓ Ok</span></div>
+    </div>`).join('')}
+    <div style="height:8px;"></div>
+  </div>`;
+}
+
+// ── PROFILE ───────────────────────────────────────────────
+function renderProfile(){
+  const txTotal=state.txs.reduce((s,tx)=>s+tx.amt,0);
+  const menu=[
+    {icon:'👤',label:t('myInfo'),sub:'Amina Hassan',color:'#1DB954',action:null},
+    {icon:'🔒',label:t('security'),sub:'PIN & Kidole',color:'#5BC8F5',action:null},
+    {icon:'🏦',label:t('payMethods'),sub:'M-Pesa, Visa •••4242',color:'#F5C842',action:null},
+    {icon:'🔔',label:t('notifs'),sub:'SMS & App imewashwa',color:'#F5874E',action:null},
+    {icon:'🌍',label:t('langMenu'),sub:'Kiswahili / EN / FR',color:'#B57BF7',action:`go('language')`},
+    {icon:'❓',label:t('help'),sub:'+255 800 000 111',color:'#5BC8A0',action:null},
+  ];
+  return `<div class="p20">
+    <div class="center mb22">
+      <div style="width:78px;height:78px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--gd));display:flex;align-items:center;justify-content:center;font-size:34px;margin:0 auto 12px;box-shadow:0 0 24px var(--glow);">👩🏿</div>
+      <div class="syne" style="font-size:20px;font-weight:800;">${state.user?.name||'Amina Hassan'}</div>
+      <div class="muted f13 mt4">${state.user?.phone||'+255 712 345 678'}</div>
+      <div style="margin-top:8px;"><span class="tag">${t('verified')}</span></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:20px;">
+      ${[['TZS '+fmt(txTotal),'Jumla'],[state.txs.length,'Miamala'],[state.linked.length+1,'Akaunti']].map(([v,l])=>`<div class="card" style="flex:1;text-align:center;padding:14px 8px;">
+        <div class="green syne" style="font-size:15px;font-weight:800;">${v}</div>
+        <div class="muted f10 mt4">${l}</div>
+      </div>`).join('')}
+    </div>
+    ${menu.map(m=>`<div class="menu-item" onclick="${m.action||''}">
+      <div style="display:flex;align-items:center;">
+        <div class="menu-ico" style="background:${m.color}18;">${m.icon}</div>
+        <div><div class="menu-name">${m.label}</div><div class="menu-sub">${m.sub}</div></div>
+      </div>
+      <span style="color:${m.action?'var(--green)':'var(--muted)'};font-size:20px;">›</span>
+    </div>`).join('')}
+    ${btn(t('logout'),'doLogout()','btn btn-danger')}
+    <div style="height:16px;"></div>
+  </div>`;
+}
+
+function doLogout(){
+  state.user=null;
+  state.page='login';
+  state.linked=[];
+  state.txs=[];
+  state.balance=0;
+  render();
+}
+
+// ── SUCCESS ───────────────────────────────────────────────
+function renderSuccess(){
+  const isSend=state.successType==='send';
+  const isLink=state.successType==='link';
+  const txId='#TXN-'+uid();
+  return `<div style="min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;text-align:center;">
+    <div class="success-circle">${isSend?'↗️':'✓'}</div>
+    <div class="syne" style="font-size:24px;font-weight:800;margin-bottom:8px;">${isSend?t('successSend'):t('successPay')}</div>
+    <div class="muted f14" style="line-height:1.8;margin-bottom:28px;">${isSend?'Pesa zimetumwa kwa usalama.\nMpokeaji atapokea SMS sasa hivi.':'Muamala umekamilika kwa usalama.\nUtapokea uthibitisho kwa SMS.'}</div>
+    <div class="card mb22" style="border-color:rgba(29,185,84,.3);width:100%;text-align:left;">
+      ${[[t('txNum'),txId],[t('txTime'),now()],[t('txStatus'),t('txOk')]].map(([k,v])=>`<div class="sum-row mb8"><span class="sum-key">${k}</span><span class="sum-val">${v}</span></div>`).join('')}
+    </div>
+    ${btn(t('backHome'),`state.flow=null;state.tab='home';render()`)}
+    <div style="height:10px;"></div>
+    ${btn(t('receipt'),'','btn btn-ghost')}
+  </div>`;
+}
+
+// ── NAVIGATION HELPERS ────────────────────────────────────
+function go(dest){
+  if(dest==='back'){
+    if(state.page==='language'){ state.page=state._prevPage||'login'; render(); return; }
+    state.page='login'; render(); return;
+  }
+  if(dest==='language'){ state._prevPage=state.page==='main'?'main':state.page; state.page='language'; render(); return; }
+  if(dest==='register'){ state.registerStep=1; state.page='register'; render(); return; }
+  if(dest==='login'){ state.page='login'; render(); return; }
+}
+
+function startFlow(type){ state.flow={type}; render(); }
+
+// ── INIT ──────────────────────────────────────────────────
+// Render login screen first (shows immediately), then auto-trigger Pi auth
+render();
+
+(async () => {
+  try {
+    // Show login screen with "connecting" status before SDK loads
+    setPiStatus('Inaungana na Pi Network...', false);
+    setPiBtnState(true);
+
+    await Pi.init({ version: '2.0', sandbox: false });
+    piReady = true;
+
+    // Auto-authenticate as soon as SDK is ready
+    await doPiAuth();
+  } catch (err) {
+    // SDK may not be available outside Pi Browser — fall back gracefully
+    piReady = false;
+    setPiStatus('Pi Browser inahitajika kwa Pi auth. Ingia kwa simu hapa chini.', true);
+    setPiBtnState(false);
+  }
+})();
+</script>
+</body>
+</html>
