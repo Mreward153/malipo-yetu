@@ -1,137 +1,99 @@
-// ── Malipo Yetu — Pi Network Payment Backend ─────────────
-// Requires: npm install express node-fetch dotenv cors
-// Run:      node server.js
-// Env vars: PI_NETWORK_API_KEY=your_key_here  (set in .env)
-
-import 'dotenv/config';
-import express   from 'express';
-import cors      from 'cors';
-import fetch     from 'node-fetch';
-import { readFileSync } from 'fs';
-import { join, dirname } from 'path';
+import express from 'express';
+import cors from 'cors';
 import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import * as dotenv from 'dotenv';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const app  = express();
+dotenv.config();
+
+const app = express();
 const PORT = process.env.PORT || 3000;
+const dir = process.cwd();
 
-// ── Config ────────────────────────────────────────────────
-const PI_API_KEY     = process.env.PI_NETWORK_API_KEY;
-const PI_API_BASE    = 'https://api.minepi.com/v2';
-
+// ── Env validation ──────────────────────────────────────────────────────────
+const PI_API_KEY = process.env.PI_NETWORK_API_KEY;
 if (!PI_API_KEY) {
-  console.error('\n❌  PI_NETWORK_API_KEY is not set.');
-  console.error('    Create a .env file with:  PI_NETWORK_API_KEY=your_key_here');
-  console.error('    Get your key from: https://develop.pi\n');
+  console.error('\n[FATAL] PI_NETWORK_API_KEY is not set.\n');
   process.exit(1);
 }
 
-// ── Middleware ────────────────────────────────────────────
+const PI_EXCHANGE_RATE = parseFloat(process.env.PI_EXCHANGE_RATE) || 1000;
+const PI_API_BASE = 'https://api.minepi.com/v2';
+
+// ── Middleware ──────────────────────────────────────────────────────────────
 app.use(cors());
 app.use(express.json());
+app.use(express.static(dir));
 
-// Serve the frontend HTML from same directory
-app.use(express.static(__dirname));
-app.get('/', (_req, res) =>
-  res.sendFile(join(__dirname, 'MalipoYetu_WebApp.html'))
-);
-
-// ── Pi API helper ─────────────────────────────────────────
-async function piRequest(method, path, body) {
-  const res = await fetch(`${PI_API_BASE}${path}`, {
+// ── Helper ──────────────────────────────────────────────────────────────────
+async function piRequest(method, endpoint, body) {
+  const res = await fetch(`${PI_API_BASE}${endpoint}`, {
     method,
     headers: {
       'Authorization': `Key ${PI_API_KEY}`,
-      'Content-Type':  'application/json',
+      'Content-Type': 'application/json',
     },
-    body: body ? JSON.stringify(body) : undefined,
+    ...(body ? { body: JSON.stringify(body) } : {}),
   });
-  const data = await res.json();
-  if (!res.ok) throw Object.assign(new Error(`Pi API ${res.status}`), { data });
-  return data;
+  const text = await res.text();
+  let json;
+  try { json = JSON.parse(text); } catch { json = { raw: text }; }
+  if (!res.ok) {
+    const err = new Error(`Pi API ${endpoint} → ${res.status}`);
+    err.status = res.status;
+    err.piError = json;
+    throw err;
+  }
+  return json;
 }
 
-// ── POST /api/payments/approve ────────────────────────────
-// Called by frontend onReadyForServerApproval(paymentId)
-// We validate the payment matches what we expect, then approve it.
+// ── Routes ──────────────────────────────────────────────────────────────────
+app.post('/api/payments/quote', (req, res) => {
+  const { tzs_amount, service, serviceRef } = req.body;
+  if (!tzs_amount || typeof tzs_amount !== 'number' || tzs_amount <= 0) {
+    return res.status(400).json({ error: 'Invalid tzs_amount' });
+  }
+  const pi_amount = parseFloat((tzs_amount / PI_EXCHANGE_RATE).toFixed(4));
+  return res.json({ pi_amount, tzs_amount, rate: PI_EXCHANGE_RATE });
+});
+
 app.post('/api/payments/approve', async (req, res) => {
   const { paymentId } = req.body;
   if (!paymentId) return res.status(400).json({ error: 'paymentId required' });
-
   try {
-    // 1. Fetch payment details from Pi to verify
     const payment = await piRequest('GET', `/payments/${paymentId}`);
-    console.log('Approving payment:', paymentId, payment.amount, 'Pi');
-
-    // 2. Basic sanity checks
-    if (payment.status.developer_approved) {
-      // Already approved (e.g. retry) — still respond OK
-      return res.json({ approved: true, paymentId });
-    }
-    if (!payment.metadata?.service) {
-      return res.status(400).json({ error: 'Payment missing service metadata' });
-    }
-    if (payment.amount <= 0) {
-      return res.status(400).json({ error: 'Invalid payment amount' });
-    }
-
-    // 3. Approve — tells Pi to proceed to blockchain
-    await piRequest('POST', `/payments/${paymentId}/approve`);
-    console.log('✅ Payment approved:', paymentId);
-    res.json({ approved: true, paymentId });
-
+    const approval = await piRequest('POST', `/payments/${paymentId}/approve`);
+    console.log(`[APPROVED] paymentId=${paymentId}`);
+    return res.json(approval);
   } catch (err) {
-    console.error('Approve error:', err.message, err.data);
-    res.status(500).json({ error: err.message });
+    console.error('[approve] Error:', err.message);
+    return res.status(err.status || 500).json({ error: err.message });
   }
 });
 
-// ── POST /api/payments/complete ───────────────────────────
-// Called by frontend onReadyForServerCompletion(paymentId, txid)
-// Also used by onIncompletePaymentFound to re-complete stale payments.
 app.post('/api/payments/complete', async (req, res) => {
   const { paymentId, txid } = req.body;
   if (!paymentId) return res.status(400).json({ error: 'paymentId required' });
-
   try {
-    // 1. Fetch latest payment state
     const payment = await piRequest('GET', `/payments/${paymentId}`);
-    console.log('Completing payment:', paymentId, 'txid:', txid || payment.transaction?.txid);
-
-    // Already completed — idempotent response
-    if (payment.status.developer_completed) {
-      return res.json({ completed: true, paymentId });
+    const resolvedTxid = txid || payment.transaction?.txid;
+    if (!resolvedTxid) {
+      return res.status(202).json({ status: 'pending' });
     }
-
-    // Must be approved before completion
-    if (!payment.status.developer_approved) {
-      // Auto-approve then complete (handles incomplete payments from onIncompletePaymentFound)
-      await piRequest('POST', `/payments/${paymentId}/approve`);
-    }
-
-    // 2. Complete — finalises payment on Pi side
-    const resolvedTxid = txid || payment.transaction?.txid || '';
-    await piRequest('POST', `/payments/${paymentId}/complete`, { txid: resolvedTxid });
-
-    // 3. TODO: here you would:
-    //    - Credit the user's Malipo Yetu wallet in your database
-    //    - Trigger the actual utility payment (Selcom API, etc.)
-    //    - Send SMS/email confirmation
-    console.log('✅ Payment completed:', paymentId);
-
-    res.json({ completed: true, paymentId });
-
+    const completion = await piRequest('POST', `/payments/${paymentId}/complete`, { txid: resolvedTxid });
+    console.log(`[COMPLETED] paymentId=${paymentId} txid=${resolvedTxid}`);
+    return res.json(completion);
   } catch (err) {
-    console.error('Complete error:', err.message, err.data);
-    res.status(500).json({ error: err.message });
+    console.error('[complete] Error:', err.message);
+    return res.status(err.status || 500).json({ error: err.message });
   }
 });
 
-// ── Health check ──────────────────────────────────────────
-app.get('/api/health', (_req, res) => res.json({ ok: true, ts: Date.now() }));
+app.get('*', (req, res) => {
+  res.sendFile(join(dir, 'index.html'));
+});
 
-// ── Start ─────────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`\n🚀 Malipo Yetu backend running on http://localhost:${PORT}`);
-  console.log(`   Pi API key: ${PI_API_KEY.slice(0, 6)}...${PI_API_KEY.slice(-4)}\n`);
+  console.log(`✅ Malipo Yetu running on http://localhost:${PORT}`);
+  console.log(`   Pi exchange rate: 1 Pi = TZS ${PI_EXCHANGE_RATE}`);
 });
