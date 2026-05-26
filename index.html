@@ -377,8 +377,8 @@ const SVCS=[
   {id:'zaidi',key:null,      icon:'⊕', color:'#6B8F72',bg:'#111',   field:'',hint:''},
 ];
 const CONTACTS=[
-  {name:'Mke',phone:'+255 789 643 030',avatar:'👩🏿'},
-  {name:'Baba',phone:'+255 783 889 490',avatar:'👨🏿'},
+  {name:'Mama',phone:'+255 712 000 001',avatar:'👩🏿'},
+  {name:'Baba',phone:'+255 712 000 002',avatar:'👨🏿'},
   {name:'Ndugu Ali',phone:'+255 712 000 003',avatar:'👦🏿'},
   {name:'Bibi Fatuma',phone:'+255 712 000 004',avatar:'👵🏿'},
 ];
@@ -589,7 +589,7 @@ function renderRegister(){
     ${stepBar(3,s,labels)}
   </div>
   <div class="p20 fade-in">
-    ${s===1?inp('r_name',t('fullName'),'Mfano: Reward Mrindoko Elikaza','👤'):''}
+    ${s===1?inp('r_name',t('fullName'),'Mfano: Amina Hassan','👤'):''}
     ${s===2?inp('r_phone',t('phone'),'+255 7XX XXX XXX','📱','tel'):''}
     ${s===3?inp('r_pin',t('pin'),'● ● ● ● ● ●','🔒','password')+inp('r_pin2',t('confirmPin'),'● ● ● ● ● ●','🔐','password'):''}
     ${btn(s<3?t('cont'):t('register'),'doRegister()')}
@@ -603,7 +603,7 @@ function doRegister(){
   if(s===3){
     const p=val('r_pin'),p2=val('r_pin2');
     if(p.length<6||p!==p2) return;
-    state.user={name:val('r_name')||'Reward Mrindoko Elikaza',phone:val('r_phone')};
+    state.user={name:val('r_name')||'Amina Hassan',phone:val('r_phone')};
     state.page='main';state.tab='home';state.registerStep=1;render();return;
   }
   state.registerStep++;render();
@@ -690,6 +690,27 @@ function renderHome(){
     </div>
   </div>
   <div class="p20" style="padding-top:18px;">
+    <!-- Pi usage summary -->
+    \${(()=>{
+      const piTotal=state.txs.filter(tx=>tx.piAmount).reduce((s,tx)=>s+(tx.piAmount||0),0);
+      const piCount=state.txs.filter(tx=>tx.piAmount).length;
+      if(piCount===0) return '';
+      return \`<div class="card mb18" style="border-color:rgba(29,185,84,.3);background:rgba(29,185,84,.05);">
+        <div class="row">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:42px;height:42px;border-radius:14px;background:rgba(29,185,84,.15);display:flex;align-items:center;justify-content:center;font-size:22px;">π</div>
+            <div>
+              <div class="muted f11" style="letter-spacing:1px;text-transform:uppercase;">Pi Uliyotumia</div>
+              <div class="syne" style="font-size:18px;font-weight:800;color:var(--green);">\${piTotal.toFixed(4)} π</div>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div class="muted f11">Malipo</div>
+            <div class="syne" style="font-size:18px;font-weight:800;">\${piCount}</div>
+          </div>
+        </div>
+      </div>\`;
+    })()}
     <div class="row mb12">
       <div class="syne f15">${t('services')}</div>
       <span class="green f12">Ona Zote →</span>
@@ -808,7 +829,7 @@ function renderLinkAcc(){
   }
   if(s===2){
     body=`${type==='bank'
-      ?inp('lk_acc',t('accNum'),'0150123456789','🏦','tel')+inp('lk_own',t('ownerName'),'Reward Mrindoko Elikaza','👤')
+      ?inp('lk_acc',t('accNum'),'0150123456789','🏦','tel')+inp('lk_own',t('ownerName'),'Amina Hassan','👤')
       :inp('lk_acc',t('mobileNum'),'+255 7XX XXX XXX','📱','tel')}
     <div class="tip tip-gold mb14"><span style="color:var(--gold);font-size:12px;line-height:1.6;">${t('secNote')}</span></div>
     ${btn(t('cont'),'linkNext()')}`;
@@ -1171,7 +1192,7 @@ function renderHistory(){
 function renderProfile(){
   const txTotal=state.txs.reduce((s,tx)=>s+tx.amt,0);
   const menu=[
-    {icon:'👤',label:t('myInfo'),sub:'Reward Mrindoko Elikaza',color:'#1DB954',action:null},
+    {icon:'👤',label:t('myInfo'),sub:'Amina Hassan',color:'#1DB954',action:null},
     {icon:'🔒',label:t('security'),sub:'PIN & Kidole',color:'#5BC8F5',action:null},
     {icon:'🏦',label:t('payMethods'),sub:'M-Pesa, Visa •••4242',color:'#F5C842',action:null},
     {icon:'🔔',label:t('notifs'),sub:'SMS & App imewashwa',color:'#F5874E',action:null},
@@ -1181,8 +1202,8 @@ function renderProfile(){
   return `<div class="p20">
     <div class="center mb22">
       <div style="width:78px;height:78px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--gd));display:flex;align-items:center;justify-content:center;font-size:34px;margin:0 auto 12px;box-shadow:0 0 24px var(--glow);">👩🏿</div>
-      <div class="syne" style="font-size:20px;font-weight:800;">${state.user?.name||'Reward Mrindoko Elikaza'}</div>
-      <div class="muted f13 mt4">${state.user?.phone||'+255 783 889 490'}</div>
+      <div class="syne" style="font-size:20px;font-weight:800;">${state.user?.name||'Amina Hassan'}</div>
+      <div class="muted f13 mt4">${state.user?.phone||'+255 712 345 678'}</div>
       <div style="margin-top:8px;"><span class="tag">${t('verified')}</span></div>
     </div>
     <div style="display:flex;gap:10px;margin-bottom:20px;">
@@ -1191,6 +1212,24 @@ function renderProfile(){
         <div class="muted f10 mt4">${l}</div>
       </div>`).join('')}
     </div>
+    \${(()=>{
+      const piTotal=state.txs.filter(tx=>tx.piAmount).reduce((s,tx)=>s+(tx.piAmount||0),0);
+      const piCount=state.txs.filter(tx=>tx.piAmount).length;
+      if(piCount===0) return '';
+      return \`<div class="card mb20" style="border-color:rgba(29,185,84,.3);background:rgba(29,185,84,.05);">
+        <div class="f11 muted mb10" style="letter-spacing:1px;text-transform:uppercase;">Pi Uliyotumia kupitia Malipo Yetu</div>
+        <div class="row">
+          <div>
+            <div class="syne" style="font-size:22px;font-weight:800;color:var(--green);">\${piTotal.toFixed(4)} π</div>
+            <div class="muted f12 mt4">Jumla ya Pi</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="syne" style="font-size:22px;font-weight:800;">\${piCount}</div>
+            <div class="muted f12 mt4">Malipo</div>
+          </div>
+        </div>
+      </div>\`;
+    })()}
     ${menu.map(m=>`<div class="menu-item" onclick="${m.action||''}">
       <div style="display:flex;align-items:center;">
         <div class="menu-ico" style="background:${m.color}18;">${m.icon}</div>
