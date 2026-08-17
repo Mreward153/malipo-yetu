@@ -466,7 +466,7 @@ async function doPiAuth() {
   try {
     // 1. Ensure SDK is initialised (idempotent if already done)
     if (!piReady) {
-      await Pi.init({ version: '2.0', sandbox: false });
+      await Pi.init({ version: '2.0', sandbox: true });
       piReady = true;
     }
 
@@ -983,7 +983,7 @@ async function doPayService(){
   // ── 1. Ensure Pi SDK is initialised before any Pi.createPayment call ──
   if (!piReady) {
     try {
-      await Pi.init({ version: '2.0', sandbox: false });
+      await Pi.init({ version: '2.0', sandbox: true });
       piReady = true;
     } catch(e) {
       alert('Pi SDK haijapatikana. Tumia Pi Browser.');
@@ -1292,7 +1292,7 @@ render();
     setPiStatus('Inaungana na Pi Network...', false);
     setPiBtnState(true);
 
-    await Pi.init({ version: '2.0', sandbox: false });
+    await Pi.init({ version: '2.0', sandbox: true });
     piReady = true;
 
     // Auto-authenticate as soon as SDK is ready
