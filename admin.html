@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Malipo Yetu — Admin</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background: #0f1115;
+    color: #eef0f3;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 24px 16px 60px; }
+  h1 { font-size: 20px; margin: 0 0 20px; }
+
+  /* Login screen */
+  #login-screen { display: flex; flex-direction: column; min-height: 80vh; justify-content: center; align-items: center; padding: 16px; }
+  #login-screen input {
+    width: 100%; max-width: 320px; padding: 14px; font-size: 16px;
+    border-radius: 10px; border: 1px solid #333; background: #1a1d24; color: #fff;
+    margin-bottom: 12px;
+  }
+  #login-screen button, .refresh-btn {
+    width: 100%; max-width: 320px; padding: 14px; font-size: 16px; font-weight: 600;
+    border-radius: 10px; border: none; background: #16a34a; color: #fff; cursor: pointer;
+  }
+  #login-error { color: #f87171; font-size: 14px; margin-bottom: 8px; min-height: 18px; }
+
+  /* Dashboard */
+  #dashboard { display: none; }
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .card {
+    background: #1a1d24; border: 1px solid #262a33; border-radius: 14px;
+    padding: 16px;
+  }
+  .card .label { font-size: 12px; color: #9aa1ac; margin-bottom: 6px; }
+  .card .value { font-size: 22px; font-weight: 700; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid #262a33; }
+  th { color: #9aa1ac; font-weight: 500; }
+  td.mono { font-family: monospace; font-size: 12px; color: #cbd2da; }
+
+  .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .refresh-btn { width: auto; padding: 8px 14px; font-size: 14px; }
+  .empty { color: #9aa1ac; font-size: 14px; padding: 20px 0; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- LOGIN -->
+  <div id="login-screen">
+    <h1>Malipo Yetu — Admin</h1>
+    <div id="login-error"></div>
+    <input type="password" id="password-input" placeholder="Weka password" autocomplete="current-password" />
+    <button onclick="login()">Ingia</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard">
+    <div class="top-row">
+      <h1>Takwimu za Malipo</h1>
+      <button class="refresh-btn" onclick="loadStats()">🔄 Onyesha upya</button>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="label">Jumla ya Malipo</div>
+        <div class="value" id="stat-count">—</div>
+      </div>
+      <div class="card">
+        <div class="label">Watumiaji wa Kipekee</div>
+        <div class="value" id="stat-users">—</div>
+      </div>
+      <div class="card">
+        <div class="label">Mapato (Pi)</div>
+        <div class="value" id="stat-pi">—</div>
+      </div>
+      <div class="card">
+        <div class="label">Mapato (TZS)</div>
+        <div class="value" id="stat-tzs">—</div>
+      </div>
+    </div>
+
+    <h2 style="font-size:15px; color:#9aa1ac; margin: 20px 0 8px;">Malipo ya Hivi Karibuni</h2>
+    <div id="recent-wrap">
+      <div class="empty">Inapakia...</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const savedPass = sessionStorage.getItem('adminPass');
+  if (savedPass) {
+    showDashboard();
+    loadStats();
+  }
+
+  async function login() {
+    const pass = document.getElementById('password-input').value;
+    const errEl = document.getElementById('login-error');
+    errEl.textContent = '';
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pass }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        errEl.textContent = data.error || 'Imeshindikana kuingia';
+        return;
+      }
+      sessionStorage.setItem('adminPass', pass);
+      showDashboard();
+      loadStats();
+    } catch (e) {
+      errEl.textContent = 'Hitilafu ya mtandao';
+    }
+  }
+
+  function showDashboard() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+  }
+
+  async function loadStats() {
+    const pass = sessionStorage.getItem('adminPass');
+    if (!pass) return;
+    try {
+      const res = await fetch('/api/admin/stats', {
+        headers: { 'x-admin-password': pass },
+      });
+      if (res.status === 401) {
+        sessionStorage.removeItem('adminPass');
+        document.getElementById('login-screen').style.display = 'flex';
+        document.getElementById('dashboard').style.display = 'none';
+        document.getElementById('login-error').textContent = 'Muda wa kuingia umeisha, ingia tena.';
+        return;
+      }
+      const data = await res.json();
+      document.getElementById('stat-count').textContent = data.totalPayments;
+      document.getElementById('stat-users').textContent = data.uniqueUsers;
+      document.getElementById('stat-pi').textContent = data.totalPi + ' π';
+      document.getElementById('stat-tzs').textContent = 'TZS ' + Number(data.totalTzs).toLocaleString('sw-TZ');
+
+      const wrap = document.getElementById('recent-wrap');
+      if (!data.recent || data.recent.length === 0) {
+        wrap.innerHTML = '<div class="empty">Hakuna malipo bado.</div>';
+        return;
+      }
+      const rows = data.recent.map(p => `
+        <tr>
+          <td>${new Date(p.completedAt).toLocaleString('sw-TZ')}</td>
+          <td>${p.service || '—'}</td>
+          <td>${p.amountPi} π</td>
+          <td class="mono">${(p.userUid || '').slice(0, 10)}…</td>
+        </tr>
+      `).join('');
+      wrap.innerHTML = `
+        <table>
+          <thead>
+            <tr><th>Tarehe</th><th>Huduma</th><th>Kiasi</th><th>Mtumiaji</th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    } catch (e) {
+      document.getElementById('recent-wrap').innerHTML = '<div class="empty">Imeshindwa kupakia data.</div>';
+    }
+  }
+
+  document.getElementById('password-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') login();
+  });
+</script>
+
+</body>
+</html>
